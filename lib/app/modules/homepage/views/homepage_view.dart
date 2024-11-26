@@ -142,53 +142,90 @@ class _HomePageViewState extends State<HomePageView> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
-                      child: Obx(() => TableCalendar(
-                        focusedDay: _focusedDay.value,
-                        firstDay: DateTime(2000),
-                        lastDay: DateTime(2100),
-                        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                        onDaySelected: (selectedDay, focusedDay) {
-                          setState(() {
-                            _selectedDay = selectedDay;
+                      child: GetBuilder<ContainerController>(
+                        builder: (controller) => TableCalendar(
+                          firstDay: DateTime.utc(2023, 1, 1),
+                          lastDay: DateTime.utc(2025, 12, 31),
+                          focusedDay: _focusedDay.value,
+                          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                          calendarStyle: CalendarStyle(
+                            outsideDaysVisible: false,
+                            weekendTextStyle: const TextStyle(color: Colors.red),
+                            holidayTextStyle: const TextStyle(color: Colors.red),
+                            todayDecoration: BoxDecoration(
+                              color: Colors.blue[200],
+                              shape: BoxShape.circle,
+                            ),
+                            selectedDecoration: BoxDecoration(
+                              color: Colors.blue[600],
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          calendarBuilders: CalendarBuilders(
+                            markerBuilder: (context, date, events) {
+                              final count = controller.getMeetingCountForDate(date);
+                              if (count > 0) {
+                                return Positioned(
+                                  right: 1,
+                                  bottom: 1,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple[400],
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    child: Text(
+                                      '$count',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              return null;
+                            },
+                            todayBuilder: (context, date, _) {
+                              return Container(
+                                margin: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[200],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${date.day}',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          headerStyle: const HeaderStyle(
+                            formatButtonVisible: false,
+                            titleCentered: true,
+                            leftChevronMargin: EdgeInsets.zero,
+                            rightChevronMargin: EdgeInsets.zero,
+                            headerPadding: EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          onDaySelected: (selectedDay, focusedDay) {
+                            setState(() {
+                              _selectedDay = selectedDay;
+                              _focusedDay.value = focusedDay;
+                            });
+                          },
+                          onPageChanged: (focusedDay) {
                             _focusedDay.value = focusedDay;
-                          });
-                        },
-                        calendarStyle: CalendarStyle(
-                          outsideDaysVisible: false,
-                          weekendTextStyle: const TextStyle(color: Colors.red),
-                          holidayTextStyle: const TextStyle(color: Colors.red),
-                          todayDecoration: BoxDecoration(
-                            color: Colors.blue[400],
-                            shape: BoxShape.circle,
-                          ),
-                          selectedDecoration: BoxDecoration(
-                            color: Colors.orange[400],
-                            shape: BoxShape.circle,
-                          ),
-                          defaultTextStyle: const TextStyle(fontWeight: FontWeight.w500),
-                          weekendDecoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.red[100]!),
-                          ),
+                          },
                         ),
-                        headerStyle: const HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                          leftChevronVisible: false,
-                          rightChevronVisible: false,
-                          headerPadding: EdgeInsets.symmetric(vertical: 20),
-                        ),
-                        daysOfWeekStyle: DaysOfWeekStyle(
-                          weekdayStyle: TextStyle(
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.bold,
-                          ),
-                          weekendStyle: TextStyle(
-                            color: Colors.red[300],
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )),
+                      ),
                     ),
                   ),
                 ),
@@ -268,86 +305,129 @@ class _HomePageViewState extends State<HomePageView> {
                       itemBuilder: (context, index) {
                         final meeting = todayMeetings[index];
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.white, Colors.grey[50]!],
+                              colors: [
+                                Colors.purple[100]!,
+                                Colors.purple[50]!,
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.grey.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                                spreadRadius: 1,
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
                           child: Stack(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.all(20),
+                                padding: const EdgeInsets.all(16.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Meeting Type
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
+                                    // Meeting Type with Overflow Protection
+                                    Text(
+                                      containerController.containerList[index].value1,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2E3147),
                                       ),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [Colors.blue[400]!, Colors.blue[600]!],
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.event_note,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            meeting.value1,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 8),
                                     
-                                    // Time
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange[50],
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.orange[200]!),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.access_time, color: Colors.orange[700]),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            meeting.value2,
-                                            style: TextStyle(
-                                              color: Colors.orange[700],
-                                              fontWeight: FontWeight.w600,
+                                    // Meeting Details with Overflow Protection
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              // Start Time
+                                              Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.access_time,
+                                                    size: 16,
+                                                    color: Colors.purple,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text(
+                                                      'Start: ${containerController.containerList[index].value2}',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.grey[700],
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              
+                                              // End Time
+                                              Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.access_time_filled,
+                                                    size: 16,
+                                                    color: Colors.purple,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text(
+                                                      'End: ${containerController.containerList[index].value3}',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.grey[700],
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        
+                                        // Date Display
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.purple[50],
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: Colors.purple[200]!,
+                                              width: 1,
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                          child: Text(
+                                            containerController
+                                                .containerList[index]
+                                                .formattedDate,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.purple[700],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -364,7 +444,7 @@ class _HomePageViewState extends State<HomePageView> {
                                       if (value == 'Delete') {
                                         bool confirm = await ConfirmDialog.show(context);
                                         if (confirm) {
-                                          containerController.deleteContainerData(index);
+                                          timePickerController.handleDelete(index);
                                         }
                                       }
                                     },

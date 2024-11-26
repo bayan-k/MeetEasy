@@ -5,57 +5,101 @@ import 'package:meetingreminder/models/container.dart';
 
 class ContainerController extends GetxController {
   var containerList = <ContainerData>[].obs;
-  final String boxName = 'meetingBox';
+  final String boxName = 'ContainerData';
+  late Box<ContainerData> _box;
 
   @override
   void onInit() {
     super.onInit();
-    loadContainerData();
+    _initBox();
   }
 
-  Future<void> storeContainerData(String time1, String remarks, String time2, DateTime date, String formattedDate) async {
+  Future<void> _initBox() async {
     try {
-      final box = await Hive.openBox<ContainerData>(boxName);
+      _box = Hive.box<ContainerData>(boxName);
+      await loadContainerData();
+    } catch (e) {
+      print('Error initializing box: $e');
+      CustomSnackbar.showError('Error initializing data storage');
+    }
+  }
+
+  int getMeetingCountForDate(DateTime date) {
+    return containerList.where((meeting) {
+      return meeting.date.year == date.year &&
+             meeting.date.month == date.month &&
+             meeting.date.day == date.day;
+    }).length;
+  }
+
+  Map<DateTime, int> getMeetingCountMap() {
+    final countMap = <DateTime, int>{};
+    for (var meeting in containerList) {
+      final date = DateTime(
+        meeting.date.year,
+        meeting.date.month,
+        meeting.date.day,
+      );
+      countMap[date] = (countMap[date] ?? 0) + 1;
+    }
+    return countMap;
+  }
+
+  Future<void> storeContainerData(
+    String key1,
+    String value1,
+    String key2,
+    String value2,
+    String key3,
+    String value3,
+    DateTime date,
+    String formattedDate,
+  ) async {
+    try {
       final data = ContainerData(
-        key1: 'headline',
-        value1: remarks,
-        key2: 'Meeting Time',
-        value2: time1,
-        key3: 'Details',
-        value3: time2,
+        key1: key1,
+        value1: value1,
+        key2: key2,
+        value2: value2,
+        key3: key3,
+        value3: value3,
         date: date,
         formattedDate: formattedDate,
       );
       
-      await box.add(data);
+      await _box.add(data);
       await loadContainerData();
+      update(); // Force UI update
       CustomSnackbar.showSuccess('Meeting saved successfully');
     } catch (e) {
+      print('Error storing data: $e');
       CustomSnackbar.showError('Failed to save meeting: ${e.toString()}');
     }
   }
 
   Future<void> loadContainerData() async {
     try {
-      final box = await Hive.openBox<ContainerData>(boxName);
-      final loadedData = box.values.toList();
+      final loadedData = _box.values.toList();
       
       // Sort meetings by date and time
       loadedData.sort((a, b) => a.date.compareTo(b.date));
       
-      containerList.value = loadedData;
+      containerList.assignAll(loadedData); // Use assignAll instead of value
+      update(); // Force UI update
     } catch (e) {
-      CustomSnackbar.showError('Failed to load meetings: ${e.toString()}');
+      print('Error loading data: $e');
+      CustomSnackbar.showError('Failed to load meetings');
     }
   }
 
   Future<void> deleteContainerData(int index) async {
     try {
-      final box = await Hive.openBox<ContainerData>(boxName);
-      await box.deleteAt(index);
+      await _box.deleteAt(index);
       await loadContainerData();
+      update(); // Force UI update
       CustomSnackbar.showSuccess('Meeting deleted successfully');
     } catch (e) {
+      print('Error deleting data: $e');
       CustomSnackbar.showError('Failed to delete meeting: ${e.toString()}');
     }
   }
@@ -67,5 +111,11 @@ class ContainerController extends GetxController {
              meeting.date.month == now.month &&
              meeting.date.day == now.day;
     }).toList();
+  }
+
+  @override
+  void onClose() {
+    _box.close();
+    super.onClose();
   }
 }

@@ -58,20 +58,37 @@ Widget buildReminderBox(BuildContext context) {
             ),
           ),
           const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: TextField(
-              controller: timePickerController.remarkController.value,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(16),
-                border: InputBorder.none,
-                hintText: 'Enter meeting type',
-                hintStyle: TextStyle(color: Colors.grey[400]),
-                prefixIcon: Icon(Icons.edit_note, color: Colors.blue[400]),
+          TextField(
+            controller: timePickerController.remarkController.value,
+            decoration: InputDecoration(
+              hintText: 'Meeting Type (Optional)',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.grey[300]!,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.grey[300]!,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.purple[300]!,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
               ),
             ),
           ),
@@ -232,11 +249,7 @@ Widget buildReminderBox(BuildContext context) {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    timePickerController.addMeeting(
-                      timePickerController.remarkController.value.text,
-                      timePickerController.startTime.value,
-                      timePickerController.endTime.value,
-                    );
+                    timePickerController.storeMeetingData();
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

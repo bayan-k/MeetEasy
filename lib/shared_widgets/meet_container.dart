@@ -48,7 +48,7 @@ Widget buildContainer(BuildContext context) {
                           onSelected: (value) {
                             if (value == 'Delete') {
                               // Perform delete action
-                              timePickerController.deleteMeeting(index);
+                              timePickerController.handleDelete(index);
                             }
                           },
                           itemBuilder: (BuildContext context) {

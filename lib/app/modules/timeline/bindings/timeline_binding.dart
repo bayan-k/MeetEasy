@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/bottom_nav_controller.dart';
+import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/meeting_counter.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
 
@@ -12,8 +13,21 @@ class TimelineBinding extends Bindings {
       () => TimelineController(),
     );
 
-    Get.lazyPut<BottomNavController>(() => BottomNavController());
-    Get.lazyPut<MeetingCounter>(() => MeetingCounter());
-    Get.lazyPut<TimePickerController>(() => TimePickerController());
+    // Reuse existing instances from homepage
+    if (!Get.isRegistered<ContainerController>()) {
+      Get.put<ContainerController>(ContainerController(), permanent: true);
+    }
+    
+    if (!Get.isRegistered<BottomNavController>()) {
+      Get.put<BottomNavController>(BottomNavController(), permanent: true);
+    }
+    
+    if (!Get.isRegistered<MeetingCounter>()) {
+      Get.put<MeetingCounter>(MeetingCounter(), permanent: true);
+    }
+    
+    if (!Get.isRegistered<TimePickerController>()) {
+      Get.put<TimePickerController>(TimePickerController(), permanent: true);
+    }
   }
 }
