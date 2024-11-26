@@ -23,11 +23,20 @@ class ContainerController extends GetxController {
 
   void saveContainerData() async {
     try {
-      // Save all items in containerList to Hive
+      // Clear existing data
+      await containerBox.clear();
+      
+      // Save all items in containerList to Hive with new indices
       for (var i = 0; i < containerList.length; i++) {
         await containerBox.put(i, containerList[i]);
       }
-      await loadContainerData();  // Refresh the list after saving
+      
+      // Update the counter
+      controller.counter.value = containerList.length;
+      await Hive.box('settings').put('counter', controller.counter.value);
+      
+      // Refresh the list after saving
+      await loadContainerData();
     } catch (e) {
       print('Error saving container data: $e');
     }
@@ -53,8 +62,16 @@ class ContainerController extends GetxController {
       controller.counter.value = containerList.length;
       await Hive.box('settings').put('counter', controller.counter.value);
       
+      // Force UI refresh
+      containerList.refresh();
+      
     } catch (e) {
       print('Error storing container data: $e');
+      Get.snackbar(
+        "Error",
+        "Failed to save meeting data",
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -65,17 +82,46 @@ class ContainerController extends GetxController {
 
       for (var key in keys) {
         final data = containerBox.get(key) as ContainerData;
-
         containerList.add(data);
-
-        print('${data.key1} : ${data.value1}');
-        print('${data.key2} : ${data.value2}');
-        print('${data.key3} : ${data.value3}');
       }
+      
+      // Force UI refresh
+      containerList.refresh();
     } catch (e) {
       print('Error loading container data: $e');
     }
   }
 
-  void deleteContainerData() {}
+  Future<void> deleteContainerData(int index) async {
+    try {
+      // Remove from the list
+      containerList.removeAt(index);
+      
+      // Clear Hive box and resave the updated list
+      await containerBox.clear();
+      for (var i = 0; i < containerList.length; i++) {
+        await containerBox.put(i, containerList[i]);
+      }
+      
+      // Update the counter
+      controller.counter.value = containerList.length;
+      await Hive.box('settings').put('counter', controller.counter.value);
+      
+      // Force UI refresh
+      containerList.refresh();
+      
+      Get.snackbar(
+        "Success",
+        "Meeting deleted successfully",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('Error deleting container data: $e');
+      Get.snackbar(
+        "Error",
+        "Failed to delete meeting",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
 }

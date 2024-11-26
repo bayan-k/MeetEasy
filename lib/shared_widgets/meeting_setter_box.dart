@@ -5,151 +5,221 @@ import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_cont
 final timePickerController = Get.find<TimePickerController>();
 
 Widget buildReminderBox(BuildContext context) {
-  return AlertDialog(
-    title: const Text('Select Meeting Time'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        buildRemarksRow(),
-        const SizedBox(height: 20),
-        buildStartTimeInput(context),
-        const SizedBox(height: 20),
-        buildEndtimeInput(context),
-        const SizedBox(height: 20),
-        buildConfirmDeleteButton(),
-        const SizedBox(height: 20),
-      ],
-    ),
-  );
-}
-
-Widget buildRemarksRow() {
-  return Row(
-    children: [
-      Container(
-          height: 20,
-          decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(
-                Radius.circular(5),
-              ),
-              color: Color.fromARGB(255, 218, 190, 117)),
-          child: const Text(
-            'Remarks',
-            style: TextStyle(fontSize: 15),
-          )),
-      const SizedBox(
-        width: 100,
-      ),
-      Container(
-        width: 100,
-        height: 50, // Set width of the container
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 8), // Add padding inside the container
-        decoration: BoxDecoration(
-          color: Colors.white, // Background color
-          borderRadius: BorderRadius.circular(12), // Rounded corners
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12, // Shadow color
-              blurRadius: 8, // Blur effect
-              offset: Offset(0, 4), // Shadow position
-            ),
-          ],
-          border:
-              Border.all(color: Colors.grey.shade300), // Border color and width
-        ),
-        child: TextField(
-          controller: timePickerController.remarkController.value,
-          decoration: InputDecoration(
-            border: InputBorder.none, // Removes default TextField border
-            hintText: 'Enter your text here',
-            // Placeholder text
-            hintStyle:
-                TextStyle(color: Colors.grey.shade400), // Hint text styling
+  return Dialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    child: Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        ),
+        ],
       ),
-    ],
-  );
-}
-
-Widget buildStartTimeInput(context) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      GestureDetector(
-        onTap: () {},
-        child: Container(
-            height: 20,
-            decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(5),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                color: Color.fromARGB(255, 218, 190, 117)),
-            child: const Text('Start Time:')),
-      ),
-      SizedBox(
-        width: 100,
-        child: Obx(() {
-          return GestureDetector(
-              onTap: () => timePickerController.meetingSetter(context, true),
-              child: Container(
-                  child: Text(timePickerController.startTime.value.isEmpty
-                      ? 'select time'
-                      : timePickerController.startTime.value)));
-        }),
-      ),
-    ],
-  );
-}
-
-Widget buildEndtimeInput(context) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      GestureDetector(
-        onTap: () {},
-        child: Container(
-            height: 20,
-            decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(5),
+                child: Icon(Icons.event, color: Colors.blue[700], size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'New Meeting',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2E3147),
                 ),
-                color: Color.fromARGB(255, 218, 190, 117)),
-            child: const Text('End Time:')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Meeting Type Input
+          const Text(
+            'Meeting Type',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E3147),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: TextField(
+              controller: timePickerController.remarkController.value,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.all(16),
+                border: InputBorder.none,
+                hintText: 'Enter meeting type',
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                prefixIcon: Icon(Icons.edit_note, color: Colors.blue[400]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Time Selection
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Start Time',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E3147),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => timePickerController.meetingSetter(context, true),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange[200]!),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, color: Colors.orange[700], size: 20),
+                            const SizedBox(width: 8),
+                            Obx(() => Text(
+                              timePickerController.startTime.value.isEmpty
+                                  ? 'Select time'
+                                  : timePickerController.startTime.value,
+                              style: TextStyle(
+                                color: Colors.orange[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'End Time',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E3147),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => timePickerController.meetingSetter(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green[200]!),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, color: Colors.green[700], size: 20),
+                            const SizedBox(width: 8),
+                            Obx(() => Text(
+                              timePickerController.endTime.value.isEmpty
+                                  ? 'Select time'
+                                  : timePickerController.endTime.value,
+                              style: TextStyle(
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          
+          // Action Buttons
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => timePickerController.clearTimes(),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    timePickerController.addMeeting(
+                      timePickerController.remarkController.value.text,
+                      timePickerController.startTime.value,
+                      timePickerController.endTime.value,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Create Meeting',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-      SizedBox(
-        width: 100,
-        child: Obx(() {
-          return GestureDetector(
-              onTap: () => timePickerController.meetingSetter(context, false),
-              child: Container(
-                  child: Text(timePickerController.endTime.value.isEmpty
-                      ? 'select time'
-                      : timePickerController.endTime.value)));
-        }),
-      ),
-    ],
-  );
-}
-
-Widget buildConfirmDeleteButton() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceAround,
-    children: [
-      ElevatedButton(
-        onPressed: () {
-          timePickerController.addMeeting(
-              timePickerController.remarkController.value.text,
-              timePickerController.startTime.value,
-              timePickerController.endTime.value);
-        },
-        child: const Text('Confirm'),
-      ),
-      ElevatedButton(
-        onPressed: () {},
-        child: const Text('Delete'),
-      ),
-    ],
+    ),
   );
 }

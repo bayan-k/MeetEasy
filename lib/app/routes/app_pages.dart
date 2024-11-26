@@ -20,7 +20,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.TIMELINE,
-      page: () => const TimeLineView(),
+      page: () => TimelineView(),
       binding: TimelineBinding(),
     ),
   ];

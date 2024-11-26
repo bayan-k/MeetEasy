@@ -5,399 +5,386 @@ import 'package:meetingreminder/app/modules/homepage/controllers/container_contr
 import 'package:meetingreminder/app/modules/homepage/controllers/meeting_counter.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
 
-class TimeLineView extends StatefulWidget {
-  const TimeLineView({super.key});
+class TimelineView extends StatefulWidget {
+  const TimelineView({super.key});
 
   @override
-  State<TimeLineView> createState() => _TimeLineViewState();
+  State<TimelineView> createState() => _TimelineViewState();
 }
 
-class _TimeLineViewState extends State<TimeLineView> {
-  final BottomNavController controller = Get.find<BottomNavController>();
-  final TimePickerController timePickerController =
-      Get.find<TimePickerController>();
-  final MeetingCounter meetingCounter = Get.find<MeetingCounter>();
-  final ContainerController containerController =
-      Get.find<ContainerController>();
-  // final NotificationService _notificationService = NotificationService();
+class _TimelineViewState extends State<TimelineView> {
+  final containerController = Get.find<ContainerController>();
+  final timePickerController = Get.find<TimePickerController>();
+  final meetingCounter = Get.find<MeetingCounter>();
 
-  List<String> imageItems = [
-    'assets/images/icons/home-page.png',
-    'assets/images/icons/clock(1).png',
-  ];
-
-  Widget buildReminderBox() {
-    return AlertDialog(
-      title: const Text('Select Meeting Time'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                  height: 20,
-                  decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(5),
-                      ),
-                      color: Color.fromARGB(255, 218, 190, 117)),
-                  child: const Text(
-                    'Remarks',
-                    style: TextStyle(fontSize: 15),
-                  )),
-              const SizedBox(
-                width: 100,
+          // Background gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.blue[50]!,
+                  Colors.grey[50]!,
+                ],
               ),
-              Container(
-                width: 100,
-                height: 50, // Set width of the container
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8), // Add padding inside the container
-                decoration: BoxDecoration(
-                  color: Colors.white, // Background color
-                  borderRadius: BorderRadius.circular(12), // Rounded corners
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12, // Shadow color
-                      blurRadius: 8, // Blur effect
-                      offset: Offset(0, 4), // Shadow position
-                    ),
-                  ],
-                  border: Border.all(
-                      color: Colors.grey.shade300), // Border color and width
-                ),
-                child: TextField(
-                  controller: timePickerController.remarkController.value,
-                  decoration: InputDecoration(
-                    border:
-                        InputBorder.none, // Removes default TextField border
-                    hintText: 'Enter your text here',
-                    // Placeholder text
-                    hintStyle: TextStyle(
-                        color: Colors.grey.shade400), // Hint text styling
+            ),
+          ),
+          
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // App Bar
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Meeting Timeline',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[900],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Obx(() => Text(
+                            '${containerController.containerList.length} Scheduled Meetings',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          )),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(Icons.timeline, color: Colors.blue[700], size: 24),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                
+                // Timeline
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: buildContainer(context),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  timePickerController.meetingSetter(context, true);
-                },
-                child: Container(
-                    height: 20,
-                    decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(5),
-                        ),
-                        color: Color.fromARGB(255, 218, 190, 117)),
-                    child: const Text('Start Time:')),
+          
+          // Bottom Navigation Bar
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(35),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              SizedBox(
-                width: 100,
-                child: Obx(() {
-                  return Text(timePickerController.startTime.value.isEmpty
-                      ? 'select time'
-                      : timePickerController.startTime.value);
-                }),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildNavItem(context, 'Home', 'assets/images/icons/home-page.png', 0),
+                  _buildNavItem(context, 'Timeline', 'assets/images/icons/clock(1).png', 1),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // End Time Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: () => timePickerController.meetingSetter(context, false),
-                child: Container(
-                    height: 20,
-                    decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(5),
-                        ),
-                        color: Color.fromARGB(255, 218, 190, 117)),
-                    child: const Text('End Time:')),
-              ),
-              SizedBox(
-                width: 100,
-                child: Obx(() {
-                  return Text(timePickerController.endTime.value.isEmpty
-                      ? 'select time'
-                      : timePickerController.endTime.value);
-                }),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Confirm and Delete Buttons Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  timePickerController.addMeeting(
-                      timePickerController.remarkController.value.text,
-                      timePickerController.startTime.value,
-                      timePickerController.endTime.value);
-                  meetingCounter.increment();
-                  containerController.storeContainerData(
-                      timePickerController.startTime.value,
-                      timePickerController.remarkController.value.text,
-                      timePickerController.endTime.value);
-                },
-                child: const Text('Confirm'),
-              ),
-              ElevatedButton(
-                onPressed: timePickerController.clearTimes,
-                child: const Text('Delete'),
-              ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(children: [
-        buildMeetingText(),
-        buildContainer(context),
-        buildBottomBar(),
-        buildFab(),
-      ]),
-    );
-  }
-
-  Widget buildMeetingText() {
-    return Positioned(
-      top: 50,
-      left: 50,
-      child: Text(
-        'Scheduled  Meetings',
-        style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-      ),
-    );
+  Widget _buildNavItem(BuildContext context, String title, String iconPath, int index) {
+    final controller = Get.find<BottomNavController>();
+    
+    return Obx(() {
+      final isSelected = controller.selectedIndex.value == index;
+      return GestureDetector(
+        onTap: () => controller.changeIndex(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                iconPath,
+                width: 24,
+                height: 24,
+                color: isSelected ? Colors.blue : Colors.grey,
+              ),
+              if (isSelected) ...[
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    });
   }
 
   Widget buildContainer(BuildContext context) {
-    return Positioned(
-      top: 100,
-      left: 20,
-      child: SizedBox(
-          height: MediaQuery.of(context).size.height - 150,
-          width: MediaQuery.of(context).size.width - 40,
-          child: Obx(() {
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      child: Obx(() {
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: containerController.containerList.length,
+          itemBuilder: (context, index) {
+            final meeting = containerController.containerList[index];
             return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: containerController.containerList.length,
-                scrollDirection: Axis.vertical,
-                itemBuilder: (context, index) {
-                  final meeting = containerController.containerList[index];
-                  return Column(children: [
-                    Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Timeline indicator
+                  Column(
+                    children: [
+                      Container(
+                        width: 25,
+                        height: 25,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue[300]!, Colors.blue[600]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.calendar_today,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                      if (index != containerController.containerList.length - 1)
+                        Container(
+                          width: 2,
+                          height: 160,
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.blue[300]!, Colors.blue[100]!],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 20),
+                  
+                  // Meeting Card
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 15),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.white, Colors.grey[50]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
                         children: [
-                          Column(
-                            children: [
-                              const Icon(Icons.circle,
-                                  size: 12, color: Colors.blue),
-                              if (index !=
-                                  containerController.containerList.length -
-                                      1) // Show the line except for the last item
-                                Container(
-                                  width: 2,
-                                  height: 250,
-                                  color: Colors.blue,
-                                ),
-                            ],
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
+                          // Content
                           Container(
-                              height: 240,
-                              width: 200,
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.2),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Meeting Type
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
-                                ],
-                              ),
-                              child: Stack(children: [
-                                Positioned(
-                                  right: -20,
-                                  top: 0,
-                                  child: PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      if (value == 'Delete') {
-                                        // Perform delete action
-                                        containerController.containerList.removeAt(index);
-                                        containerController.saveContainerData();
-                                        meetingCounter.decrement();
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) {
-                                      return [
-                                        const PopupMenuItem(
-                                          value: 'Delete',
-                                          child: Text('Delete'),
-                                        ),
-                                      ];
-                                    },
-                                    icon: const Icon(
-                                        Icons.more_vert), // Three dots icon
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Colors.blue[400]!, Colors.blue[600]!],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 30),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        "Meeting Type : ${meeting.value1}",
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black),
+                                      const Icon(
+                                        Icons.event_note,
+                                        color: Colors.white,
+                                        size: 16,
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(width: 8),
                                       Text(
-                                        "Meeting Time : ${meeting.value2}",
+                                        meeting.value1,
                                         style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color.fromARGB(
-                                                255, 39, 36, 36)),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        "Details : ${meeting.value3}",
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color.fromARGB(
-                                                255, 26, 25, 25)),
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ])),
-                        ])
-                  ]);
-                },
-              ),
-            );
-          })),
-    );
-  }
-
-  Widget buildBottomBar() {
-    return Positioned(
-      left: 50,
-      bottom: 20,
-      child: Obx(
-        () => Row(
-          children: [
-            Container(
-              height: 80,
-              width: 200,
-              // width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color.fromRGBO(
-                    220, 245, 173, 0.6), //background: rgba(220, 245, 173, 0.6);
-
-                borderRadius: BorderRadius.circular(70),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(imageItems.length, (index) {
-                  return GestureDetector(
-                    onTap: () {
-                      controller.changeIndex(index); // Update selected index
-                    },
-                    child: Container(
-                      height: 80,
-                      width: 80,
-                      // padding: const EdgeInsets.all(5), // Space between the icons
-                      decoration: BoxDecoration(
-                          shape:
-                              BoxShape.circle, // Circular shape for each icon
-                          color: controller.selectedIndex.value == index
-                              ? Colors.white // Highlight the selected icon
-                              : const Color.fromRGBO(255, 255, 255,
-                                  0.3) //background: rgba(255, 255, 255, 0.3);
-
-                          // Non-selected icons remain transparent
+                                const SizedBox(height: 16),
+                                
+                                // Time
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.orange[200]!),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.access_time, color: Colors.orange[700], size: 18),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        meeting.value2,
+                                        style: TextStyle(
+                                          color: Colors.orange[700],
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                
+                                // Details
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.green[200]!),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.info_outline, color: Colors.green[700], size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          meeting.value3,
+                                          style: TextStyle(
+                                            color: Colors.green[700],
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                      child: Center(
-                        child: Image.asset(
-                          imageItems[index],
-                          width: 30,
-                          height: 30,
-                        ),
+                          
+                          // Delete Button
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  if (value == 'Delete') {
+                                    timePickerController.deleteMeeting(index);
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) {
+                                  return [
+                                    PopupMenuItem(
+                                      value: 'Delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete, color: Colors.red[400], size: 20),
+                                          const SizedBox(width: 8),
+                                          Text('Delete',
+                                              style: TextStyle(color: Colors.red[400])),
+                                        ],
+                                      ),
+                                    ),
+                                  ];
+                                },
+                                icon: const Icon(Icons.more_vert, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(
-              width: 50,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildFab() {
-    return Positioned(
-      bottom: 20,
-      right: 20,
-      child: GestureDetector(
-        onTap: () {
-          Get.dialog(buildReminderBox());
-        },
-        child: Container(
-          height: 80,
-          width: 80,
-          // width: double.infinity,
-          decoration: BoxDecoration(
-            color: const Color.fromRGBO(
-                220, 245, 173, 0.6), //background: rgba(220, 245, 173, 0.6);
-
-            borderRadius: BorderRadius.circular(70),
-          ),
-
-          child: const Center(
-              child: Text(
-            '+',
-            style: TextStyle(fontSize: 28),
-          )),
-        ),
-      ),
+            );
+          },
+        );
+      }),
     );
   }
 }

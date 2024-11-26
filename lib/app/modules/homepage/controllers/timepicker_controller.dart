@@ -1,7 +1,7 @@
-
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
 import 'package:meetingreminder/app/services/notification_services.dart';
 
 
@@ -123,11 +123,16 @@ class TimePickerController extends GetxController {
       return;
     }
 
+    // Add to local meeting list
     meeting.add({
       'headline': remarks,
       'Meeting Time': '$time1-$time2',
       'details': time2
     });
+
+    // Store in ContainerController and Hive
+    final containerController = Get.find<ContainerController>();
+    containerController.storeContainerData(time1, remarks, time2);
 
     // Parse startTime (e.g., "12:30 AM" or "1:45 PM")
     final startTimeParts = time1.split(":");
@@ -142,12 +147,20 @@ class TimePickerController extends GetxController {
             ? 0
             : hour;
 
-    // Now, pass these extracted hours and minutes to schedule the daily notification
+    // Schedule notification
     scheduleDailyNotification(
       remarks: remarks,
-      hour: adjustedHour,    // Pass hour here
-      minute: minute,        // Pass minute here
+      hour: adjustedHour,
+      minute: minute,
     );
+
+    // Clear the input fields
+    remarkController.value.clear();
+    startTime.value = '';
+    endTime.value = '';
+    
+    // Close the dialog
+    Get.back();
   }
 
   // Function for scheduling a one-time notification
@@ -172,7 +185,14 @@ class TimePickerController extends GetxController {
   }
 
   // Function to delete a meeting
-  void deleteMeeting(int index) {
-    meeting.removeAt(index);
+  void deleteMeeting(int index) async {
+    final containerController = Get.find<ContainerController>();
+    await containerController.deleteContainerData(index);
+    
+    // Clear the current meeting data
+    startTime.value = '';
+    endTime.value = '';
+    remarks.value = '';
+    remarkController.value.clear();
   }
 }
