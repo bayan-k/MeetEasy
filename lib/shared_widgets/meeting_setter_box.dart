@@ -76,6 +76,44 @@ Widget buildReminderBox(BuildContext context) {
             ),
           ),
           const SizedBox(height: 24),
+
+          // Date Selection
+          const Text(
+            'Meeting Date',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E3147),
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => timePickerController.dateSetter(context),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.purple[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.purple[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, color: Colors.purple[700], size: 20),
+                  const SizedBox(width: 8),
+                  Obx(() => Text(
+                    timePickerController.formattedDate.value.isEmpty
+                        ? 'Select date'
+                        : timePickerController.formattedDate.value,
+                    style: TextStyle(
+                      color: Colors.purple[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
           
           // Time Selection
           Row(
@@ -201,8 +239,8 @@ Widget buildReminderBox(BuildContext context) {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

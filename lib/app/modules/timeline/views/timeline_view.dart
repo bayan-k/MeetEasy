@@ -4,6 +4,7 @@ import 'package:meetingreminder/app/modules/homepage/controllers/bottom_nav_cont
 import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/meeting_counter.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/shared_widgets/confirm_dialog.dart';
 
 class TimelineView extends StatefulWidget {
   const TimelineView({super.key});
@@ -256,6 +257,41 @@ class _TimelineViewState extends State<TimelineView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Date Display
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Colors.purple[400]!, Colors.purple[600]!],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.calendar_today,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        meeting['formattedDate'] ?? 'No date',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
                                 // Meeting Type
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -351,9 +387,12 @@ class _TimelineViewState extends State<TimelineView> {
                             child: Material(
                               color: Colors.transparent,
                               child: PopupMenuButton<String>(
-                                onSelected: (value) {
+                                onSelected: (value) async {
                                   if (value == 'Delete') {
-                                    timePickerController.deleteMeeting(index);
+                                    bool confirm = await ConfirmDialog.show(context);
+                                    if (confirm) {
+                                      containerController.deleteContainerData(index);
+                                    }
                                   }
                                 },
                                 itemBuilder: (BuildContext context) {

@@ -1,127 +1,71 @@
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/meeting_counter.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
 import 'package:meetingreminder/models/container.dart';
 
 class ContainerController extends GetxController {
-  late Box containerBox;
-  RxList<ContainerData> containerList = <ContainerData>[].obs;
-  final contoller = Get.find<TimePickerController>();
-  final controller = Get.find<MeetingCounter>();
+  var containerList = <ContainerData>[].obs;
+  final String boxName = 'meetingBox';
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
-    try {
-      containerBox = Hive.box('ContainerData');  // Changed from openBox to box since we open it in main
-      await loadContainerData();
-    } catch (e) {
-      print('Error initializing Hive box: $e');
-    }
+    loadContainerData();
   }
 
-  void saveContainerData() async {
+  Future<void> storeContainerData(String time1, String remarks, String time2, DateTime date, String formattedDate) async {
     try {
-      // Clear existing data
-      await containerBox.clear();
-      
-      // Save all items in containerList to Hive with new indices
-      for (var i = 0; i < containerList.length; i++) {
-        await containerBox.put(i, containerList[i]);
-      }
-      
-      // Update the counter
-      controller.counter.value = containerList.length;
-      await Hive.box('settings').put('counter', controller.counter.value);
-      
-      // Refresh the list after saving
-      await loadContainerData();
-    } catch (e) {
-      print('Error saving container data: $e');
-    }
-  }
-
-  void storeContainerData(String time1, String remarks, String time2) async {
-    try {
-      final newData = ContainerData(
-          key1: 'headline',
-          value1: remarks,
-          key2: 'Meeting Time',
-          value2: '$time1-$time2',
-          key3: 'Details',
-          value3: time2);
-      
-      // Add to the list first
-      containerList.add(newData);
-      
-      // Then save to Hive using the current size as the key
-      await containerBox.put(containerList.length - 1, newData);
-      
-      // Update the counter
-      controller.counter.value = containerList.length;
-      await Hive.box('settings').put('counter', controller.counter.value);
-      
-      // Force UI refresh
-      containerList.refresh();
-      
-    } catch (e) {
-      print('Error storing container data: $e');
-      Get.snackbar(
-        "Error",
-        "Failed to save meeting data",
-        snackPosition: SnackPosition.BOTTOM,
+      final box = await Hive.openBox<ContainerData>(boxName);
+      final data = ContainerData(
+        key1: 'headline',
+        value1: remarks,
+        key2: 'Meeting Time',
+        value2: time1,
+        key3: 'Details',
+        value3: time2,
+        date: date,
+        formattedDate: formattedDate,
       );
+      
+      await box.add(data);
+      await loadContainerData();
+      CustomSnackbar.showSuccess('Meeting saved successfully');
+    } catch (e) {
+      CustomSnackbar.showError('Failed to save meeting: ${e.toString()}');
     }
   }
 
   Future<void> loadContainerData() async {
     try {
-      final keys = containerBox.keys;
-      containerList.clear();
-
-      for (var key in keys) {
-        final data = containerBox.get(key) as ContainerData;
-        containerList.add(data);
-      }
+      final box = await Hive.openBox<ContainerData>(boxName);
+      final loadedData = box.values.toList();
       
-      // Force UI refresh
-      containerList.refresh();
+      // Sort meetings by date and time
+      loadedData.sort((a, b) => a.date.compareTo(b.date));
+      
+      containerList.value = loadedData;
     } catch (e) {
-      print('Error loading container data: $e');
+      CustomSnackbar.showError('Failed to load meetings: ${e.toString()}');
     }
   }
 
   Future<void> deleteContainerData(int index) async {
     try {
-      // Remove from the list
-      containerList.removeAt(index);
-      
-      // Clear Hive box and resave the updated list
-      await containerBox.clear();
-      for (var i = 0; i < containerList.length; i++) {
-        await containerBox.put(i, containerList[i]);
-      }
-      
-      // Update the counter
-      controller.counter.value = containerList.length;
-      await Hive.box('settings').put('counter', controller.counter.value);
-      
-      // Force UI refresh
-      containerList.refresh();
-      
-      Get.snackbar(
-        "Success",
-        "Meeting deleted successfully",
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      final box = await Hive.openBox<ContainerData>(boxName);
+      await box.deleteAt(index);
+      await loadContainerData();
+      CustomSnackbar.showSuccess('Meeting deleted successfully');
     } catch (e) {
-      print('Error deleting container data: $e');
-      Get.snackbar(
-        "Error",
-        "Failed to delete meeting",
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      CustomSnackbar.showError('Failed to delete meeting: ${e.toString()}');
     }
+  }
+
+  List<ContainerData> getTodayMeetings() {
+    final now = DateTime.now();
+    return containerList.where((meeting) {
+      return meeting.date.year == now.year &&
+             meeting.date.month == now.month &&
+             meeting.date.day == now.day;
+    }).toList();
   }
 }

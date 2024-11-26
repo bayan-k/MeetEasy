@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
 import 'package:meetingreminder/app/services/notification_services.dart';
-
+import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
+import 'package:intl/intl.dart';
 
 void alarmCallback() {
   print("Alarm Triggered!");
@@ -86,6 +87,35 @@ class TimePickerController extends GetxController {
 
   var meeting = <Map<String, String>>[].obs;
   var remarkController = TextEditingController().obs;
+  var selectedDate = DateTime.now().obs;
+  var formattedDate = ''.obs;
+
+  Future<void> dateSetter(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate.value,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2025),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.purple[400]!,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      selectedDate.value = picked;
+      formattedDate.value = DateFormat('MMM d, y').format(picked);
+      update();
+    }
+  }
 
   // Clear the time values
   void clearTimes() {
@@ -114,32 +144,32 @@ class TimePickerController extends GetxController {
 
   // Function to add a meeting and schedule daily notifications
   void addMeeting(String remarks, String time1, String time2) {
-    if (remarks.isEmpty || time1.isEmpty || time2.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "Please fill all fields",
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    if (remarks.isEmpty || time1.isEmpty || time2.isEmpty || formattedDate.value.isEmpty) {
+      CustomSnackbar.showError("Please fill all fields including date");
       return;
     }
 
-    // Add to local meeting list
     meeting.add({
       'headline': remarks,
-      'Meeting Time': '$time1-$time2',
-      'details': time2
+      'meetingTime': '$time1-$time2',
+      'details': time2,
+      'date': selectedDate.value.toString(),
+      'formattedDate': formattedDate.value
     });
 
-    // Store in ContainerController and Hive
     final containerController = Get.find<ContainerController>();
-    containerController.storeContainerData(time1, remarks, time2);
+    containerController.storeContainerData(
+      time1, 
+      remarks, 
+      time2,
+      selectedDate.value,
+      formattedDate.value
+    );
 
-    // Parse startTime (e.g., "12:30 AM" or "1:45 PM")
     final startTimeParts = time1.split(":");
     final hour = int.parse(startTimeParts[0]);
-    final minute = int.parse(startTimeParts[1].split(" ")[0]); // Extract hour and minute
+    final minute = int.parse(startTimeParts[1].split(" ")[0]);
     
-    // For 12-hour format to 24-hour conversion
     final isPM = time1.contains("PM");
     final adjustedHour = isPM && hour != 12
         ? hour + 12
@@ -147,19 +177,19 @@ class TimePickerController extends GetxController {
             ? 0
             : hour;
 
-    // Schedule notification
     scheduleDailyNotification(
       remarks: remarks,
       hour: adjustedHour,
       minute: minute,
     );
 
-    // Clear the input fields
     remarkController.value.clear();
     startTime.value = '';
     endTime.value = '';
+    formattedDate.value = DateFormat('MMM d, y').format(DateTime.now());
+    selectedDate.value = DateTime.now();
     
-    // Close the dialog
+    CustomSnackbar.showSuccess("Meeting scheduled successfully");
     Get.back();
   }
 

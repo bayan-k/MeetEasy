@@ -8,7 +8,7 @@ part of 'container.dart';
 
 class ContainerDataAdapter extends TypeAdapter<ContainerData> {
   @override
-  final int typeId = 1;
+  final int typeId = 0;
 
   @override
   ContainerData read(BinaryReader reader) {
@@ -23,13 +23,15 @@ class ContainerDataAdapter extends TypeAdapter<ContainerData> {
       value2: fields[3] as String,
       key3: fields[4] as String,
       value3: fields[5] as String,
+      date: fields[6] as DateTime,
+      formattedDate: fields[7] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, ContainerData obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.key1)
       ..writeByte(1)
@@ -41,7 +43,11 @@ class ContainerDataAdapter extends TypeAdapter<ContainerData> {
       ..writeByte(4)
       ..write(obj.key3)
       ..writeByte(5)
-      ..write(obj.value3);
+      ..write(obj.value3)
+      ..writeByte(6)
+      ..write(obj.date)
+      ..writeByte(7)
+      ..write(obj.formattedDate);
   }
 
   @override

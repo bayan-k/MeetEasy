@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/bottom_nav_controller.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
-import 'package:meetingreminder/shared_widgets/meet_container.dart';
 import 'package:meetingreminder/shared_widgets/meeting_setter_box.dart';
+import 'package:meetingreminder/shared_widgets/confirm_dialog.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
@@ -202,7 +202,7 @@ class _HomePageViewState extends State<HomePageView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Today\'s Meetings',
+                        "Today's Meetings",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -217,15 +217,15 @@ class _HomePageViewState extends State<HomePageView> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.event_note, size: 16, color: Colors.blue[700]),
-                            const SizedBox(width: 4),
-                            Obx(() => Text(
-                              '${containerController.containerList.length} Meetings',
+                            Icon(Icons.calendar_today, color: Colors.blue[700], size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              DateFormat('MMM d').format(DateTime.now()),
                               style: TextStyle(
                                 color: Colors.blue[700],
                                 fontWeight: FontWeight.w600,
                               ),
-                            )),
+                            ),
                           ],
                         ),
                       ),
@@ -233,11 +233,166 @@ class _HomePageViewState extends State<HomePageView> {
                   ),
                 ),
                 
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
                 
-                // Meetings List
+                // Today's Meetings List
                 Expanded(
-                  child: buildContainer(context),
+                  child: Obx(() {
+                    final todayMeetings = containerController.getTodayMeetings();
+                    if (todayMeetings.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.event_available,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No meetings scheduled for today',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: todayMeetings.length,
+                      itemBuilder: (context, index) {
+                        final meeting = todayMeetings[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.white, Colors.grey[50]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Meeting Type
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [Colors.blue[400]!, Colors.blue[600]!],
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.event_note,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            meeting.value1,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    
+                                    // Time
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange[50],
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.orange[200]!),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.access_time, color: Colors.orange[700]),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            meeting.value2,
+                                            style: TextStyle(
+                                              color: Colors.orange[700],
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              
+                              // Delete Button
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: PopupMenuButton<String>(
+                                    onSelected: (value) async {
+                                      if (value == 'Delete') {
+                                        bool confirm = await ConfirmDialog.show(context);
+                                        if (confirm) {
+                                          containerController.deleteContainerData(index);
+                                        }
+                                      }
+                                    },
+                                    itemBuilder: (BuildContext context) {
+                                      return [
+                                        PopupMenuItem(
+                                          value: 'Delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete, color: Colors.red[400], size: 20),
+                                              const SizedBox(width: 8),
+                                              Text('Delete',
+                                                  style: TextStyle(color: Colors.red[400])),
+                                            ],
+                                          ),
+                                        ),
+                                      ];
+                                    },
+                                    icon: const Icon(Icons.more_vert, color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  }),
                 ),
               ],
             ),

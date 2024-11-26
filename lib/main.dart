@@ -27,8 +27,8 @@ void main() async {
 
   await Hive.initFlutter();
   // Register the ContainerData adapter
-  if (!Hive.isAdapterRegistered(1)) {
-    // 1 is the typeId from your ContainerData class
+  if (!Hive.isAdapterRegistered(0)) {
+    // 0 is the typeId from your ContainerData class
     Hive.registerAdapter(ContainerDataAdapter());
   }
 
